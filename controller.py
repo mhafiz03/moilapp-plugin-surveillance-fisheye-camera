@@ -36,8 +36,6 @@ class Controller(QtWidgets.QWidget):
             verticalSpacing=spacing,
             horizontalSpacing=spacing,
         )
-
-        # self.tile_layout.removeColumns(2)
         
         self.tile_layout.acceptDragAndDrop(True)
         self.tile_layout.acceptResizing(True)
@@ -65,48 +63,17 @@ class Controller(QtWidgets.QWidget):
         )
         self.i_row = 0
         self.i_column = 0
-        self.camera_threads = []
 
-        self.__image_result = None
-        # self.__width_image_result = self.round_to_nearest_100(self.ui.scrollArea.width())
-        self.__angle_image_result = 0
-        self.set_stylesheet()
-
-        # self.model_apps = ModelApps()
-        # self.model_apps.create_moildev()
-        # self.model_apps.create_image_original()
-        # self.model_apps.__configuration_view = {'Cam_type': 'image source', 'Image_saved': {}, 'Media_path': 'C:/Users/widi/Projects/nda2/moilapp/example_source/dash_camera_ori.png', 'Mode_1': {'alpha': 66.3, 'beta': -41.99, 'coord': [850, 486], 'zoom': 4}, 'Mode_2': {'coord': [None, None], 'pitch': 0, 'roll': 0, 'yaw': 0, 'zoom': 4}, 'Pano_car': {'alpha': 0, 'beta': 0, 'coord': [None, None], 'crop_bottom': 1, 'crop_left': 0, 'crop_right': 1, 'crop_top': 0}, 'Pano_tube': {'alpha_max': 110, 'alpha_min': 8, 'crop_bottom': 1, 'crop_top': 0}, 'Parameter_name': 'entaniya_vr220_12', 'Recenter_coord': [None, None], 'Source_type': 'Image/Video'}
-        # self.model_apps.update_file_config()
-        # self.model_apps.image_result.connect(self.get_image_result)
-        # self.model_apps.create_moildev()
-        # self.model_apps.create_image_original()
         self.models = []
+        self.set_stylesheet()
     
     def set_stylesheet(self):
         [button.setStyleSheet(self.model.style_pushbutton()) for button in self.findChildren(QtWidgets.QPushButton)]
         [label.setStyleSheet(self.model.style_label()) for label in self.findChildren(QtWidgets.QLabel)]
         [scroll_area.setStyleSheet(self.model.style_scroll_area()) for scroll_area in self.findChildren(QtWidgets.QScrollArea)]
         self.ui.line.setStyleSheet(self.model.style_line())
-
-    @QtCore.pyqtSlot(object)
-    def get_image_result(self, image):
-        self.__image_result = image
         
     def add_clicked(self):
-        model_apps = ModelApps()
-        model_apps.create_moildev()
-        model_apps.create_image_original()
-        # model_apps.__configuration_view = {'Cam_type': 'image source', 'Image_saved': {}, 'Media_path': 'C:/Users/widi/Projects/nda2/moilapp/example_source/dash_camera_ori.png', 'Mode_1': {'alpha': 66.3, 'beta': -41.99, 'coord': [850, 486], 'zoom': 4}, 'Mode_2': {'coord': [None, None], 'pitch': 0, 'roll': 0, 'yaw': 0, 'zoom': 4}, 'Pano_car': {'alpha': 0, 'beta': 0, 'coord': [None, None], 'crop_bottom': 1, 'crop_left': 0, 'crop_right': 1, 'crop_top': 0}, 'Pano_tube': {'alpha_max': 110, 'alpha_min': 8, 'crop_bottom': 1, 'crop_top': 0}, 'Parameter_name': 'entaniya_vr220_12', 'Recenter_coord': [None, None], 'Source_type': 'Image/Video'}
-        model_apps.update_file_config()
-        # model_apps.image_result.connect(self.get_image_result)
-        model_apps.create_moildev()
-        model_apps.create_image_original()
-        source_type, cam_type, media_source, params_name = self.model.select_media_source()
-        model_apps.set_media_source(source_type, cam_type, media_source, params_name)
-        model_apps.create_maps_fov()
-        model_apps.create_image_original()
-        model_apps.create_image_result()   
-        
         tile = QtWidgets.QWidget()
         ui = Ui_Tile()
         ui.setupUi(tile)
@@ -126,9 +93,15 @@ class Controller(QtWidgets.QWidget):
             fromRow=i_row,
             fromColumn=i_column,
         )        
-        
+
+        model_apps = ModelApps()
+        model_apps.create_moildev()
+        model_apps.create_image_original()
+        model_apps.update_file_config()
+        source_type, cam_type, media_source, params_name = self.model.select_media_source()
+        model_apps.set_media_source(source_type, cam_type, media_source, params_name)
+        # model_apps.create_maps_fov()
         model_apps.image_result.connect(lambda img: self.update_label_image(img, ui))
-        # model_apps.recent_media_source.connect(lambda string: self.update_label_image(string, ui))
         try: self.update_label_image(model_apps.image, ui)
         except: pass
         self.models.append(model_apps)
@@ -151,15 +124,6 @@ class Controller(QtWidgets.QWidget):
     def __tileLayoutResize(self, a0):
         self.tile_layout.updateGlobalSize(a0)
     
-    @staticmethod
-    def __tileHasBeenResized(widget, from_row, from_column, row_span, column_span):
-        print(f'{widget} has been resized and is now at the position ({from_row}, {from_column}) '
-              f'with a span of ({row_span}, {column_span})')
-
-    @staticmethod
-    def __tileHasBeenMoved(widget, from_layout_id, to_layout_id, from_row, from_column, to_row, to_column):
-        print(f'{widget} has been moved from position ({from_row}, {from_column}) to ({to_row}, {to_column})')
-
 
 class SurveillanceFisheyeCamera(PluginInterface):
     def __init__(self):
