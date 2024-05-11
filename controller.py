@@ -10,10 +10,15 @@ class CustomDialog(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
     
-    def setup_signal(self, slot, signal):
-        self.slot = slot
-        self.signal = signal
-        self.signal.connect(self.slot)
+    def setup_result_signal(self, slot, signal):
+        self.result_slot = slot
+        self.result_signal = signal
+        self.result_signal.connect(self.result_slot)
+
+    def setup_original_signal(self, slot, signal):
+        self.original_slot = slot
+        self.original_signal = signal
+        self.original_signal.connect(self.original_slot)
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key.Key_Escape:
@@ -22,7 +27,8 @@ class CustomDialog(QtWidgets.QDialog):
             super().keyPressEvent(event)
 
     def closeEvent(self, event):
-        self.signal.disconnect(self.slot)
+        self.result_signal.disconnect(self.result_slot)
+        self.original_signal.disconnect(self.original_slot)
         super().closeEvent(event)
 
 class Controller(QtWidgets.QWidget):
@@ -130,9 +136,10 @@ class Controller(QtWidgets.QWidget):
         ui_setup = Ui_Setup()
         dialog = CustomDialog()
         ui_setup.setupUi(dialog)
-        update_label_slot = lambda img: self.update_label_image(img, ui_setup.label_image_result, 320, False)
-        dialog.setup_signal(update_label_slot, model_apps.image_result)
-        self.update_label_image(model_apps.image, ui_setup.label_image_original, 320, False)
+        update_result_label_slot = lambda img: self.update_label_image(img, ui_setup.label_image_result, 320, False)
+        dialog.setup_result_signal(update_result_label_slot, model_apps.image_result)
+        update_original_label_slot = lambda img: self.update_label_image(img, ui_setup.label_image_original, 320, False)
+        dialog.setup_original_signal(update_original_label_slot, model_apps.signal_image_original)
         model_apps.state_rubberband = False
         model_apps.state_recent_view = "AnypointView"
         model_apps.change_anypoint_mode = "mode_1"
