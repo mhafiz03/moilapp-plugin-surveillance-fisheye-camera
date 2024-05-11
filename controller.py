@@ -6,6 +6,24 @@ from .ui_tile import Ui_Tile
 from .ui_setup import Ui_Setup
 from .QTileLayout6 import QTileLayout
 
+class CustomDialog(QtWidgets.QDialog):
+    def __init__(self):
+        super().__init__()
+    
+    def setup_signal(self, slot, signal):
+        self.slot = slot
+        self.signal = signal
+        self.signal.connect(self.slot)
+
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key.Key_Escape:
+            event.ignore()  
+        else:
+            super().keyPressEvent(event)
+
+    def closeEvent(self, event):
+        self.signal.disconnect(self.slot)
+        super().closeEvent(event)
 
 class Controller(QtWidgets.QWidget):
 
@@ -62,10 +80,8 @@ class Controller(QtWidgets.QWidget):
         self.ui.scrollArea.setMinimumWidth(
             column_number * horizontal_span + (column_number - 1) * spacing + horizontal_margins + 2
         )
-        self.i_row = 0
-        self.i_column = 0
 
-        self.models = []
+        self.each_tile = {}
         self.set_stylesheet()
     
     def set_stylesheet(self):
@@ -75,22 +91,22 @@ class Controller(QtWidgets.QWidget):
         self.ui.line.setStyleSheet(self.model.style_line())
         
     def add_clicked(self):
-        tile = QtWidgets.QWidget()
-        ui = Ui_Tile()
-        ui.setupUi(tile)
-        [w.setStyleSheet(self.model.style_label()) for w in tile.findChildren(QtWidgets.QLabel)]
-        [w.setStyleSheet(self.model.style_pushbutton()) for w in tile.findChildren(QtWidgets.QPushButton)]
-        [w.setStyleSheet(self.model.style_slider()) for w in tile.findChildren(QtWidgets.QSlider)]
+        widget_tile = QtWidgets.QWidget()
+        ui_tile = Ui_Tile()
+        ui_tile.setupUi(widget_tile)
+        [w.setStyleSheet(self.model.style_label()) for w in widget_tile.findChildren(QtWidgets.QLabel)]
+        [w.setStyleSheet(self.model.style_pushbutton()) for w in widget_tile.findChildren(QtWidgets.QPushButton)]
+        [w.setStyleSheet(self.model.style_slider()) for w in widget_tile.findChildren(QtWidgets.QSlider)]
         
         i_row, i_column = 0, 0
         while not self.tile_layout.isAreaEmpty(i_row, i_column, 1, 1):
             i_column += 1
-            if i_column > 2:
-                i_row = (i_row + 1) % 4
+            if i_column > 4:
+                i_row = (i_row + 1) % 2
                 i_column = 0
 
         self.tile_layout.addWidget(
-            widget=tile,
+            widget=widget_tile,
             fromRow=i_row,
             fromColumn=i_column,
         )        
@@ -102,21 +118,29 @@ class Controller(QtWidgets.QWidget):
         source_type, cam_type, media_source, params_name = self.model.select_media_source()
         model_apps.set_media_source(source_type, cam_type, media_source, params_name)
         # model_apps.create_maps_fov()
-        model_apps.image_result.connect(lambda img: self.update_label_image(img, ui))
-        self.update_label_image(model_apps.image, ui)
-        self.models.append(model_apps)
+        model_apps.image_result.connect(lambda img: self.update_label_image(img, ui_tile.videoLabel))
+        self.update_label_image(model_apps.image, ui_tile.videoLabel)
+        ui_tile.setupButton.clicked.connect(lambda : self.setup_tile(widget_tile, ui_tile, model_apps))
+        self.each_tile[widget_tile] = {'model_apps' : model_apps, 'ui' : ui_tile}
 
-        ui.setupButton.clicked.connect(lambda : self.setup_tile(tile, ui, model_apps))
+    def update_label_image(self, image, ui_label, width=400, scale_content=True):
+        self.model.show_image_to_label(ui_label, image, width=width, scale_content=scale_content)
 
-    def update_label_image(self, image, ui : Ui_Tile):
-        self.model.show_image_to_label(ui.videoLabel, image, width=200, scale_content=True)
-
-    def setup_tile(self, widget, ui, model_apps : ModelApps):
-        dialog = QtWidgets.QDialog()
+    def setup_tile(self, widget_tile, ui_tile, model_apps : ModelApps):
         ui_setup = Ui_Setup()
+        dialog = CustomDialog()
         ui_setup.setupUi(dialog)
-        self.model.show_image_to_label(ui_setup.label_image_original_2, model_apps.image, width=300, scale_content=True)
-        dialog.setWindowFlags(dialog.windowFlags() & ~QtCore.Qt.WindowType.WindowCloseButtonHint)
+        update_label_slot = lambda img: self.update_label_image(img, ui_setup.label_image_result, 320, False)
+        dialog.setup_signal(update_label_slot, model_apps.image_result)
+        self.update_label_image(model_apps.image, ui_setup.label_image_original, 320, False)
+        model_apps.state_rubberband = False
+        model_apps.state_recent_view = "AnypointView"
+        model_apps.change_anypoint_mode = "mode_1"
+        model_apps.set_draw_polygon = True
+        model_apps.create_maps_anypoint_mode_1()
+        model_apps.update_file_config()
+        model_apps.create_image_result()
+        # dialog.setWindowFlags(dialog.windowFlags() & ~QtCore.Qt.WindowType.WindowCloseButtonHint)
         dialog.exec()
 
     def captured_clicked(self):
