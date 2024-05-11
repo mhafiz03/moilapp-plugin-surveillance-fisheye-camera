@@ -3,6 +3,7 @@ from src.models.model_apps import Model, ModelApps
 from PyQt6 import QtWidgets, QtCore, QtGui
 from .ui_main import Ui_Main
 from .ui_tile import Ui_Tile
+from .ui_setup import Ui_Setup
 from .QTileLayout6 import QTileLayout
 
 
@@ -102,12 +103,21 @@ class Controller(QtWidgets.QWidget):
         model_apps.set_media_source(source_type, cam_type, media_source, params_name)
         # model_apps.create_maps_fov()
         model_apps.image_result.connect(lambda img: self.update_label_image(img, ui))
-        try: self.update_label_image(model_apps.image, ui)
-        except: pass
+        self.update_label_image(model_apps.image, ui)
         self.models.append(model_apps)
+
+        ui.setupButton.clicked.connect(lambda : self.setup_tile(tile, ui, model_apps))
 
     def update_label_image(self, image, ui : Ui_Tile):
         self.model.show_image_to_label(ui.videoLabel, image, width=200, scale_content=True)
+
+    def setup_tile(self, widget, ui, model_apps : ModelApps):
+        dialog = QtWidgets.QDialog()
+        ui_setup = Ui_Setup()
+        ui_setup.setupUi(dialog)
+        self.model.show_image_to_label(ui_setup.label_image_original_2, model_apps.image, width=300, scale_content=True)
+        dialog.setWindowFlags(dialog.windowFlags() & ~QtCore.Qt.WindowType.WindowCloseButtonHint)
+        dialog.exec()
 
     def captured_clicked(self):
         pass
