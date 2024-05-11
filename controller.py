@@ -136,19 +136,45 @@ class Controller(QtWidgets.QWidget):
         ui_setup = Ui_Setup()
         dialog = CustomDialog()
         ui_setup.setupUi(dialog)
+
         update_result_label_slot = lambda img: self.update_label_image(img, ui_setup.label_image_result, 320, False)
         dialog.setup_result_signal(update_result_label_slot, model_apps.image_result)
         update_original_label_slot = lambda img: self.update_label_image(img, ui_setup.label_image_original, 320, False)
         dialog.setup_original_signal(update_original_label_slot, model_apps.signal_image_original)
+        
+        model_apps.alpha_beta.connect(self.alpha_beta_from_coordinate)
         model_apps.state_rubberband = False
         model_apps.state_recent_view = "AnypointView"
         model_apps.change_anypoint_mode = "mode_1"
         model_apps.set_draw_polygon = True
         model_apps.create_maps_anypoint_mode_1()
-        model_apps.update_file_config()
-        model_apps.create_image_result()
         # dialog.setWindowFlags(dialog.windowFlags() & ~QtCore.Qt.WindowType.WindowCloseButtonHint)
+
+        # ui_setup.label_image_original.mouseReleaseEvent = self.label_original_mouse_release_event
+        # ui_setup.label_image_original.mouseMoveEvent = self.label_original_mouse_move_event
+        ui_setup.label_image_original.mousePressEvent = lambda event: self.label_original_mouse_press_event(event, model_apps, ui_setup)
+        # ui_setup.label_image_original.leaveEvent = self.label_original_mouse_leave_event
+        # ui_setup.label_image_original.mouseDoubleClickEvent = self.label_original_mouse_double_click_event
+    
         dialog.exec()
+
+    def label_original_mouse_release_event(self, event):
+        pass
+
+    def label_original_mouse_move_event(self, event):
+        pass
+
+    def label_original_mouse_press_event(self, event, setup_model_apps, ui_setup):
+        setup_model_apps.label_original_mouse_move_event(ui_setup.label_image_original, event)
+
+    def label_original_mouse_leave_event(self, event):
+        pass
+
+    def label_original_mouse_double_click_event(self, event):
+        pass
+
+    def alpha_beta_from_coordinate(self, alpha_beta):
+        print(alpha_beta)
 
     def captured_clicked(self):
         pass
