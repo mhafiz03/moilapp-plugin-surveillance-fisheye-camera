@@ -3,7 +3,7 @@ from src.models.model_apps import Model, ModelApps
 from PyQt6 import QtWidgets, QtCore, QtGui
 from .ui_main import Ui_Main
 from .ui_tile import Ui_Tile
-from .ui_setup import Ui_Form
+from .ui_setup import Ui_Setup
 from .QTileLayout6 import QTileLayout
 
 # for the setup dialog
@@ -150,7 +150,7 @@ class Controller(QtWidgets.QWidget):
         self.model.show_image_to_label(ui_label, image, width=width, scale_content=scale_content)
 
     def setup_tile(self, widget_tile, ui_tile, model_apps : ModelApps):
-        ui_setup = Ui_Form()
+        ui_setup = Ui_Setup()
         dialog = SetupDialog()
         ui_setup.setupUi(dialog)
 
