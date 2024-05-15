@@ -1,0 +1,24 @@
+<RCC>
+  <qresource prefix="icon">
+    <file>close.png</file>
+    <file>fullscreen.png</file>
+    <file>lens.png</file>
+    <file>record.png</file>
+    <file>screenshot.png</file>
+    <file>setup.png</file>
+    <file>center.png</file>
+    <file>down.png</file>
+    <file>left.png</file>
+    <file>right.png</file>
+    <file>up.png</file>
+    <file>play.png</file>
+    <file>pause.png</file>
+    <file>forward.png</file>
+    <file>rewind.png</file>
+    <file>stop.png</file>
+    <file>cross.png</file>
+    <file>camera.png</file>
+    <file>trash.png</file>
+    <file>plus.png</file>
+  </qresource>
+</RCC>

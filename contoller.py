@@ -71,9 +71,6 @@ class Controller(QtWidgets.QWidget):
         widget_tile = QtWidgets.QWidget()
         ui_tile = Ui_Form()
         ui_tile.setupUi(widget_tile)
-        [w.setStyleSheet(self.model.style_label()) for w in widget_tile.findChildren(QtWidgets.QLabel)]
-        [w.setStyleSheet(self.model.style_pushbutton()) for w in widget_tile.findChildren(QtWidgets.QPushButton)]
-        [w.setStyleSheet(self.model.style_slider()) for w in widget_tile.findChildren(QtWidgets.QSlider)]
 
         # I have no idea how this works but I think the order of calling these is important
         model_apps = ModelApps()
@@ -100,6 +97,10 @@ class Controller(QtWidgets.QWidget):
         ui_setup = Ui_Setup()
         dialog = SetupDialog()
         ui_setup.setupUi(dialog)
+        [label.setStyleSheet(self.model.style_label()) for label in dialog.findChildren(QtWidgets.QLabel)]
+        [button.setStyleSheet(self.model.style_pushbutton()) for button in dialog.findChildren(QtWidgets.QPushButton)]
+        [spinbox.setStyleSheet(self.model.style_spinbox()) for spinbox in dialog.findChildren(QtWidgets.QSpinBox)]
+        [combobox.setStyleSheet(self.model.style_combobox()) for combobox in dialog.findChildren(QtWidgets.QComboBox)]
 
         # setup and gracefully close the slots and signals of image_result and signal_image_original from ModelApps
         update_result_label_slot = lambda img: self.update_label_image(img, ui_setup.label_image_result, 320, False)
