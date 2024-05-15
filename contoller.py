@@ -61,9 +61,10 @@ class Controller(QtWidgets.QWidget):
     def set_stylesheet(self):
         [button.setStyleSheet(self.model.style_pushbutton()) for button in self.findChildren(QtWidgets.QPushButton)]
         [label.setStyleSheet(self.model.style_label()) for label in self.findChildren(QtWidgets.QLabel)]
-        [scroll_area.setStyleSheet(self.model.style_scroll_area()) for scroll_area in
-         self.findChildren(QtWidgets.QScrollArea)]
+        [scroll_area.setStyleSheet(self.model.style_scroll_area()) for scroll_area in self.findChildren(QtWidgets.QScrollArea)]
         self.ui.line.setStyleSheet(self.model.style_line())
+        self.ui.line_2.setStyleSheet(self.model.style_line())
+        self.ui.line_3.setStyleSheet(self.model.style_line())
 
     # create new widget with ui_tile design and add it into the tile_layout
     def add_clicked(self):
