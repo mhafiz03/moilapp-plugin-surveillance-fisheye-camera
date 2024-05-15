@@ -4,6 +4,7 @@ from PyQt6 import QtWidgets, QtCore, QtGui
 from .surveillance import Ui_Form
 from .ui_setup import Ui_Setup
 
+MAX_MONITOR_INDEX = 8
 
 # for the setup dialog
 class SetupDialog(QtWidgets.QDialog):
@@ -53,9 +54,10 @@ class Controller(QtWidgets.QWidget):
         self.ui.recordedButton.clicked.connect(self.recorded_clicked)
         self.ui.capturedButton.clicked.connect(self.captured_clicked)
 
-        # this dictionary (it was previously a list) is to keep the ModelApps instance (created later) alive in this class object
-        self.each_tile = {}
+        self.model2idx = {}
+        self.idx2model = {}
         self.set_stylesheet()
+        self.cur_idx = 1
 
     # find every QPushButton, QLabel, QScrollArea, and Line, this works because this class is a subclass of QWidget
     def set_stylesheet(self):
@@ -68,39 +70,41 @@ class Controller(QtWidgets.QWidget):
 
     # create new widget with ui_tile design and add it into the tile_layout
     def add_clicked(self):
-        widget_tile = QtWidgets.QWidget()
-        ui_tile = Ui_Form()
-        ui_tile.setupUi(widget_tile)
+        n = self.cur_idx
+        label = getattr(self.ui, "displayLab%s" % n)
+        setup_button = getattr(self.ui, "setupButton%s" % n)
+        capture_button = getattr(self.ui, "captureButton%s" % n)
 
         # I have no idea how this works but I think the order of calling these is important
         model_apps = ModelApps()
-        model_apps.create_moildev()
-        model_apps.create_image_original()
+        # model_apps.create_moildev()
+        # model_apps.create_image_original()
         model_apps.update_file_config()
         source_type, cam_type, media_source, params_name = self.model.select_media_source()
         model_apps.set_media_source(source_type, cam_type, media_source, params_name)
         # model_apps.create_maps_fov() # no clue what this does
 
-        model_apps.image_result.connect(lambda img: self.update_label_image(img, ui_tile.displayLab1))
+        model_apps.image_result.connect(lambda img: self.update_label_image(img, label))
         # the above is sufficient if wanting to display videos, but the below one is needed to display images
-        self.update_label_image(model_apps.image, ui_tile.displayLab1)
+        self.update_label_image(model_apps.image, label)
 
-        ui_tile.setupButton1.clicked.connect(lambda: self.setup_tile(widget_tile, ui_tile, model_apps))
+        setup_button.clicked.connect(lambda: self.setup_tile(model_apps))
 
         # to make the model_apps instance alive
-        self.each_tile[widget_tile] = {'model_apps': model_apps, 'ui': ui_tile}
+        self.idx2model[n] = model_apps
+        self.model2idx[model_apps] = n
+        self.cur_idx = (self.cur_idx + 1) % 9 
+        if self.cur_idx == 0: 
+            self.cur_idx += 1
+        print(self.cur_idx)
 
-    def update_label_image(self, image, ui_label, width=400, scale_content=True):
+    def update_label_image(self, image, ui_label, width=300, scale_content=False):
         self.model.show_image_to_label(ui_label, image, width=width, scale_content=scale_content)
 
-    def setup_tile(self, widget_tile, ui_tile, model_apps: ModelApps):
+    def setup_tile(self, model_apps: ModelApps):
         ui_setup = Ui_Setup()
         dialog = SetupDialog()
         ui_setup.setupUi(dialog)
-        [label.setStyleSheet(self.model.style_label()) for label in dialog.findChildren(QtWidgets.QLabel)]
-        [button.setStyleSheet(self.model.style_pushbutton()) for button in dialog.findChildren(QtWidgets.QPushButton)]
-        [spinbox.setStyleSheet(self.model.style_spinbox()) for spinbox in dialog.findChildren(QtWidgets.QSpinBox)]
-        [combobox.setStyleSheet(self.model.style_combobox()) for combobox in dialog.findChildren(QtWidgets.QComboBox)]
 
         # setup and gracefully close the slots and signals of image_result and signal_image_original from ModelApps
         update_result_label_slot = lambda img: self.update_label_image(img, ui_setup.label_image_result, 320, False)
