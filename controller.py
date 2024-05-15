@@ -146,18 +146,22 @@ class Controller(QtWidgets.QWidget):
         # to make the model_apps instance alive 
         self.each_tile[widget_tile] = {'model_apps' : model_apps, 'ui' : ui_tile}
 
-    def update_label_image(self, image, ui_label, width=400, scale_content=True):
+    def update_label_image(self, image, ui_label, width=300, scale_content=False):
         self.model.show_image_to_label(ui_label, image, width=width, scale_content=scale_content)
 
     def setup_tile(self, widget_tile, ui_tile, model_apps : ModelApps):
         ui_setup = Ui_Setup()
         dialog = SetupDialog()
         ui_setup.setupUi(dialog)
+        [label.setStyleSheet(self.model.style_label()) for label in dialog.findChildren(QtWidgets.QLabel)]
+        [button.setStyleSheet(self.model.style_pushbutton()) for button in dialog.findChildren(QtWidgets.QPushButton)]
+        [spinbox.setStyleSheet(self.model.style_spinbox()) for spinbox in dialog.findChildren(QtWidgets.QSpinBox)]
+        [combobox.setStyleSheet(self.model.style_combobox()) for combobox in dialog.findChildren(QtWidgets.QComboBox)]
 
         # setup and gracefully close the slots and signals of image_result and signal_image_original from ModelApps
-        update_result_label_slot = lambda img: self.update_label_image(img, ui_setup.label_image_result, 320, False)
+        update_result_label_slot = lambda img: self.update_label_image(img, ui_setup.label_image_result, 300, False)
         dialog.setup_result_signal(update_result_label_slot, model_apps.image_result)
-        update_original_label_slot = lambda img: self.update_label_image(img, ui_setup.label_image_original, 320, False)
+        update_original_label_slot = lambda img: self.update_label_image(img, ui_setup.label_image_original, 300, False)
         dialog.setup_original_signal(update_original_label_slot, model_apps.signal_image_original)
         
         model_apps.alpha_beta.connect(self.alpha_beta_from_coordinate)

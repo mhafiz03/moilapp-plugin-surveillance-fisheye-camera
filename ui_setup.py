@@ -305,6 +305,7 @@ class Ui_Setup(object):
         self.belowButton = QtWidgets.QPushButton(parent=self.frame4)
         self.belowButton.setMinimumSize(QtCore.QSize(60, 60))
         self.belowButton.setMaximumSize(QtCore.QSize(50, 50))
+        self.belowButton.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.belowButton.setText("")
         icon3 = QtGui.QIcon()
         icon3.addPixmap(QtGui.QPixmap(":/icon/down.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>526</width>
-    <height>341</height>
+    <width>450</width>
+    <height>382</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,22 +17,59 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QLabel" name="videoLabel">
-       <property name="minimumSize">
-        <size>
-         <width>300</width>
-         <height>260</height>
-        </size>
+      <widget class="QScrollArea" name="scrollArea">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
-       <property name="frameShape">
-        <enum>QFrame::Box</enum>
+       <property name="verticalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
        </property>
-       <property name="text">
-        <string/>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+       <property name="sizeAdjustPolicy">
+        <enum>QAbstractScrollArea::AdjustToContents</enum>
+       </property>
+       <property name="widgetResizable">
+        <bool>true</bool>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
        </property>
+       <widget class="QWidget" name="scrollAreaWidgetContents">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>424</width>
+          <height>299</height>
+         </rect>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLabel" name="videoLabel">
+           <property name="minimumSize">
+            <size>
+             <width>300</width>
+             <height>260</height>
+            </size>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::Box</enum>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
       </widget>
      </item>
      <item>
@@ -61,6 +98,10 @@
           <property name="text">
            <string>Setup</string>
           </property>
+          <property name="icon">
+           <iconset resource="resources/surveillance.qrc">
+            <normaloff>:/icon/setup.png</normaloff>:/icon/setup.png</iconset>
+          </property>
          </widget>
         </item>
         <item>
@@ -73,6 +114,10 @@
           </property>
           <property name="text">
            <string>Capture</string>
+          </property>
+          <property name="icon">
+           <iconset resource="resources/surveillance.qrc">
+            <normaloff>:/icon/lens.png</normaloff>:/icon/lens.png</iconset>
           </property>
          </widget>
         </item>
@@ -87,41 +132,26 @@
           <property name="text">
            <string>Record</string>
           </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="timeStartLabel">
-          <property name="text">
-           <string>00:00</string>
-          </property>
-          <property name="scaledContents">
-           <bool>false</bool>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
+          <property name="icon">
+           <iconset resource="resources/surveillance.qrc">
+            <normaloff>:/icon/record.png</normaloff>:/icon/record.png</iconset>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QSlider" name="horizontalSlider">
-          <property name="minimumSize">
+         <widget class="QPushButton" name="pushButton">
+          <property name="maximumSize">
            <size>
-            <width>100</width>
-            <height>0</height>
+            <width>30</width>
+            <height>16777215</height>
            </size>
           </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="timeEndLabel">
           <property name="text">
-           <string>99:99</string>
+           <string/>
           </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
+          <property name="icon">
+           <iconset resource="resources/surveillance.qrc">
+            <normaloff>:/icon/close.png</normaloff>:/icon/close.png</iconset>
           </property>
          </widget>
         </item>
@@ -132,6 +162,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources/surveillance.qrc"/>
+ </resources>
  <connections/>
 </ui>
