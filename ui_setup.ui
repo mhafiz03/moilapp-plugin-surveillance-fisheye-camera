@@ -487,6 +487,9 @@
                        <property name="text">
                         <string>M1</string>
                        </property>
+                       <attribute name="buttonGroup">
+                        <string notr="true">modeSelectGroup</string>
+                       </attribute>
                       </widget>
                      </item>
                      <item>
@@ -494,6 +497,9 @@
                        <property name="text">
                         <string>M2</string>
                        </property>
+                       <attribute name="buttonGroup">
+                        <string notr="true">modeSelectGroup</string>
+                       </attribute>
                       </widget>
                      </item>
                      <item>
@@ -974,4 +980,7 @@
   <include location="resources/surveillance.qrc"/>
  </resources>
  <connections/>
+ <buttongroups>
+  <buttongroup name="modeSelectGroup"/>
+ </buttongroups>
 </ui>

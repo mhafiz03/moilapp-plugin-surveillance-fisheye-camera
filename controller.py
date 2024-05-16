@@ -129,6 +129,7 @@ class Controller(QtWidgets.QWidget):
 
             return_status = self.setup_monitor(model_apps)
             if return_status is False:
+                self.delete_monitor(model_apps)
                 del model_apps
                 return
 
@@ -172,6 +173,24 @@ class Controller(QtWidgets.QWidget):
         ui_setup.cancelButton.clicked.connect(dialog.close_function)
         ui_setup.okButton.clicked.connect(dialog.accept_function)
 
+        # set up Anypoint Mode 1 or 2 with state_recent_view = "AnypointView"
+        def mode_select_clicked():
+            if ui_setup.m1Button.isChecked():
+                print('anypoint mode 1')
+                model_apps.state_recent_view = "AnypointView"
+                model_apps.change_anypoint_mode = "mode_1"
+                model_apps.create_maps_anypoint_mode_1()
+            else:
+                print('anypoint mode 2')
+                model_apps.state_recent_view = "AnypointView"
+                model_apps.change_anypoint_mode = "mode_2"
+                model_apps.create_maps_anypoint_mode_2()
+
+        ui_setup.m1Button.setChecked(True)
+        ui_setup.modeSelectGroup.buttonClicked.connect(mode_select_clicked)
+        
+        mode_select_clicked()
+        
         # setup and gracefully close the slots and signals of image_result and signal_image_original from ModelApps
         update_result_label_slot = lambda img: self.update_label_image(ui_setup.label_image_result, img, 320, False)
         dialog.setup_result_signal(update_result_label_slot, model_apps.image_result)
@@ -180,20 +199,9 @@ class Controller(QtWidgets.QWidget):
 
         model_apps.alpha_beta.connect(self.alpha_beta_from_coordinate)
         model_apps.state_rubberband = False  # no idea what this is
-
-        # set up Anypoint Mode 1 or 2 with state_recent_view = "AnypointView" # uncomment any mode you didn't use
-        model_apps.state_recent_view = "AnypointView"
-        model_apps.change_anypoint_mode = "mode_1"
         model_apps.set_draw_polygon = True
-        model_apps.create_maps_anypoint_mode_1()
-
-        # model_apps.state_recent_view = "AnypointView"
-        # model_apps.change_anypoint_mode = "mode_2"
-        # model_apps.set_draw_polygon = True
-        # model_apps.create_maps_anypoint_mode_2()
 
         # setup mouse events
-        # just mouseMoveEvent is sufficient but without mousePressEvent, it will be laggy (on my machine, YMMV)
         # ui_setup.label_image_original.mouseReleaseEvent =
         ui_setup.label_image_original.mouseMoveEvent = lambda event: model_apps.label_original_mouse_move_event(
             ui_setup.label_image_original, event)
@@ -207,34 +215,42 @@ class Controller(QtWidgets.QWidget):
         if result == QtWidgets.QDialog.DialogCode.Accepted:
             return True
         elif result == QtWidgets.QDialog.DialogCode.Rejected:
+            # import os, re
+            # os.remove('./models/cached/cache_config.yaml')
+            # with open('./models/cached/plugin_cached.yaml', 'w', encoding='utf-8') as fp:
+            #     fp.write('plugin_run: 0\n')
             return False
+    
+    # def mode_select_clicked(self, ui_setup, model_apps):
+        
 
     def delete_monitor(self, model_apps):
+        if model_apps is not None:
+            model_apps.timer.stop()
+            model_apps.__image_result = None
+            model_apps.image = None
+            model_apps.image_resize = None
+
+            model_apps.reset_config()
+
+            if model_apps.cap is not None:
+                try:
+                    model_apps.cap.close()
+                except:
+                    pass
+                model_apps.cap = None
+            
         ui_idx = self.grid_manager.get_index_of_slot(model_apps)
         if ui_idx == -1: return
 
         label, setup_button, capture_button, _ = self.get_monitor_ui_by_idx(ui_idx)
         label.setText(' ')
+        # delete_button.blockSignals(True)
         setup_button.clicked.disconnect()
         # capture_button.clicked.disconnect()
-
-        model_apps.timer.stop()
-        model_apps.__image_result = None
-        model_apps.image = None
-        model_apps.image_resize = None
-
-        model_apps.reset_config()
-
-        if model_apps.cap is not None:
-            try:
-                model_apps.cap.close()
-            except:
-                pass
-        model_apps.cap = None
-
-        # THIS WILL MAKE "QThread: Destroyed while thread is still running"
-        # Already used QTimer.singleShot(1000, lambda: ...) but still same results
         # delete_button.clicked.disconnect()
+
+        # delete_button.blockSignals(False)
 
         self.grid_manager.clear_slot(ui_idx)
 
