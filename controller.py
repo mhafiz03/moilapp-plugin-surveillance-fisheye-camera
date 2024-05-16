@@ -133,13 +133,32 @@ class Controller(QtWidgets.QWidget):
             model_apps.image_result.connect(lambda img: self.update_label_image(label, img))
             model_apps.create_image_result()
 
-            setup_button.clicked.connect(lambda: self.setup_monitor(model_apps))
+            setup_button.clicked.connect(lambda: self.setup_clicked(ui_idx, (source_type, cam_type, media_source, params_name)))
             delete_button.clicked.connect(lambda: self.delete_monitor(model_apps))
 
             # to keep the model_apps instance alive
             self.grid_manager.set_slot(ui_idx, model_apps)
 
+    def setup_clicked(self, ui_idx : int, media_sources : tuple):
+        label, setup_button, capture_button, delete_button = self.get_monitor_ui_by_idx(ui_idx)
+        prev_model_apps = self.grid_manager.get_slot_by_index(ui_idx)
+        model_apps = ModelApps()
+        model_apps.update_file_config()
+        model_apps.set_media_source(*media_sources)
+
+        return_status = self.setup_monitor(model_apps)
+        if return_status is False:
+            del model_apps
+            return
         
+        self.delete_monitor(prev_model_apps)
+        model_apps.image_result.connect(lambda img: self.update_label_image(label, img))
+        model_apps.create_image_result()
+        setup_button.clicked.connect(lambda: self.setup_clicked(ui_idx, media_sources))
+        delete_button.clicked.connect(lambda: self.delete_monitor(model_apps))
+        self.grid_manager.set_slot(ui_idx, model_apps)
+
+
 
     def update_label_image(self, ui_label, image, width=300, scale_content=False):
         self.model.show_image_to_label(ui_label, image, width=width, scale_content=scale_content)
@@ -213,7 +232,8 @@ class Controller(QtWidgets.QWidget):
         # delete_button.clicked.disconnect() 
 
         self.grid_manager.clear_slot(ui_idx)
-        
+    
+    
 
     def get_monitor_ui_by_idx(self, ui_idx):
         label = getattr(self.ui, "displayLab%s" % ui_idx)
