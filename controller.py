@@ -117,15 +117,11 @@ class Controller(QtWidgets.QWidget):
         ui_idx = self.grid_manager.get_empty_slots()[0]
         label, setup_button, capture_button, delete_button = self.get_monitor_ui_by_idx(ui_idx)
 
-        # I have no idea how this works but I think the order of calling these is important
-        # model_apps.create_moildev()
-        # model_apps.create_image_original()
         source_type, cam_type, media_source, params_name = self.model.select_media_source()
         if media_source is not None:
             model_apps = ModelApps()
             model_apps.update_file_config()
             model_apps.set_media_source(source_type, cam_type, media_source, params_name)
-            # model_apps.create_maps_fov() # no clue what this does
 
             return_status = self.setup_monitor(model_apps)
             if return_status is False:
@@ -175,31 +171,44 @@ class Controller(QtWidgets.QWidget):
 
         # set up Anypoint Mode 1 or 2 with state_recent_view = "AnypointView"
         def mode_select_clicked():
+            ui_setup.frameMode2.hide()
+            ui_setup.frameMode1.hide()
             if ui_setup.m1Button.isChecked():
-                print('anypoint mode 1')
+                ui_setup.frameMode1.show()
                 model_apps.state_recent_view = "AnypointView"
                 model_apps.change_anypoint_mode = "mode_1"
                 model_apps.create_maps_anypoint_mode_1()
             else:
-                print('anypoint mode 2')
+                ui_setup.frameMode2.show()
                 model_apps.state_recent_view = "AnypointView"
                 model_apps.change_anypoint_mode = "mode_2"
                 model_apps.create_maps_anypoint_mode_2()
 
         ui_setup.m1Button.setChecked(True)
         ui_setup.modeSelectGroup.buttonClicked.connect(mode_select_clicked)
-        
         mode_select_clicked()
         
-        # setup and gracefully close the slots and signals of image_result and signal_image_original from ModelApps
-        update_result_label_slot = lambda img: self.update_label_image(ui_setup.label_image_result, img, 320, False)
+        ui_setup.label_15.hide()
+        ui_setup.comboBox_resolution_sources.hide()
+
+        def checkbox_click():
+            if ui_setup.checkBox.isChecked():
+                model_apps.set_draw_polygon = True
+            else:
+                model_apps.set_draw_polygon = False
+
+        ui_setup.checkBox.stateChanged.connect(checkbox_click)
+        ui_setup.checkBox.setChecked(True)
+        checkbox_click()
+
+        # setup and gracefully close the slots and signals of ModelApps (image_result and signal_image_original)
+        update_result_label_slot = lambda img: self.update_label_image(ui_setup.label_image_result, img)
         dialog.setup_result_signal(update_result_label_slot, model_apps.image_result)
-        update_original_label_slot = lambda img: self.update_label_image(ui_setup.label_image_original, img, 320, False)
+        update_original_label_slot = lambda img: self.update_label_image(ui_setup.label_image_original, img)
         dialog.setup_original_signal(update_original_label_slot, model_apps.signal_image_original)
 
         model_apps.alpha_beta.connect(self.alpha_beta_from_coordinate)
-        model_apps.state_rubberband = False  # no idea what this is
-        model_apps.set_draw_polygon = True
+        model_apps.state_rubberband = False
 
         # setup mouse events
         # ui_setup.label_image_original.mouseReleaseEvent =
@@ -220,9 +229,6 @@ class Controller(QtWidgets.QWidget):
             # with open('./models/cached/plugin_cached.yaml', 'w', encoding='utf-8') as fp:
             #     fp.write('plugin_run: 0\n')
             return False
-    
-    # def mode_select_clicked(self, ui_setup, model_apps):
-        
 
     def delete_monitor(self, model_apps):
         if model_apps is not None:
