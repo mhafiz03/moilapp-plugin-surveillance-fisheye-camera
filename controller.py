@@ -6,6 +6,7 @@ from .ui_setup import Ui_Setup
 
 MAX_MONITOR_INDEX = 8
 
+
 class GridManager:
     def __init__(self):
         self.slots = [None] * 8
@@ -13,7 +14,7 @@ class GridManager:
     def get_index_of_slot(self, element):
         try:
             index = self.slots.index(element)
-            return index + 1  
+            return index + 1
         except ValueError:
             return -1
 
@@ -35,6 +36,7 @@ class GridManager:
     def clear_slot(self, index):
         if 1 <= index <= len(self.slots):
             self.slots[index - 1] = None
+
 
 # for the setup dialog
 class SetupDialog(QtWidgets.QDialog):
@@ -75,7 +77,7 @@ class SetupDialog(QtWidgets.QDialog):
         self.disconnect_signals()
         self.accept()
         self.close()
-    
+
     def disconnect_signals(self):
         self.result_signal.disconnect(self.result_slot)
         self.original_signal.disconnect(self.original_slot)
@@ -101,12 +103,12 @@ class Controller(QtWidgets.QWidget):
 
         self.set_stylesheet()
 
-
     # find every QPushButton, QLabel, QScrollArea, and Line, this works because this class is a subclass of QWidget
     def set_stylesheet(self):
         [button.setStyleSheet(self.model.style_pushbutton()) for button in self.findChildren(QtWidgets.QPushButton)]
         [label.setStyleSheet(self.model.style_label()) for label in self.findChildren(QtWidgets.QLabel)]
-        [scroll_area.setStyleSheet(self.model.style_scroll_area()) for scroll_area in self.findChildren(QtWidgets.QScrollArea)]
+        [scroll_area.setStyleSheet(self.model.style_scroll_area()) for scroll_area in
+         self.findChildren(QtWidgets.QScrollArea)]
         self.ui.line.setStyleSheet(self.model.style_line())
         self.ui.line_2.setStyleSheet(self.model.style_line())
         self.ui.line_3.setStyleSheet(self.model.style_line())
@@ -133,13 +135,14 @@ class Controller(QtWidgets.QWidget):
             model_apps.image_result.connect(lambda img: self.update_label_image(label, img))
             model_apps.create_image_result()
 
-            setup_button.clicked.connect(lambda: self.setup_clicked(ui_idx, (source_type, cam_type, media_source, params_name)))
+            setup_button.clicked.connect(
+                lambda: self.setup_clicked(ui_idx, (source_type, cam_type, media_source, params_name)))
             delete_button.clicked.connect(lambda: self.delete_monitor(model_apps))
 
             # to keep the model_apps instance alive
             self.grid_manager.set_slot(ui_idx, model_apps)
 
-    def setup_clicked(self, ui_idx : int, media_sources : tuple):
+    def setup_clicked(self, ui_idx: int, media_sources: tuple):
         label, setup_button, capture_button, delete_button = self.get_monitor_ui_by_idx(ui_idx)
         prev_model_apps = self.grid_manager.get_slot_by_index(ui_idx)
         model_apps = ModelApps()
@@ -150,15 +153,13 @@ class Controller(QtWidgets.QWidget):
         if return_status is False:
             del model_apps
             return
-        
+
         self.delete_monitor(prev_model_apps)
         model_apps.image_result.connect(lambda img: self.update_label_image(label, img))
         model_apps.create_image_result()
         setup_button.clicked.connect(lambda: self.setup_clicked(ui_idx, media_sources))
         delete_button.clicked.connect(lambda: self.delete_monitor(model_apps))
         self.grid_manager.set_slot(ui_idx, model_apps)
-
-
 
     def update_label_image(self, ui_label, image, width=300, scale_content=False):
         self.model.show_image_to_label(ui_label, image, width=width, scale_content=scale_content)
@@ -180,12 +181,16 @@ class Controller(QtWidgets.QWidget):
         model_apps.alpha_beta.connect(self.alpha_beta_from_coordinate)
         model_apps.state_rubberband = False  # no idea what this is
 
-        # set up Anypoint Mode 1 with state_recent_view = "AnypointView"
-        # and change_anypoint_mode = "mode_1" then create_maps_anypoint_mode_1()
+        # set up Anypoint Mode 1 or 2 with state_recent_view = "AnypointView" # uncomment any mode you didn't use
         model_apps.state_recent_view = "AnypointView"
         model_apps.change_anypoint_mode = "mode_1"
         model_apps.set_draw_polygon = True
         model_apps.create_maps_anypoint_mode_1()
+
+        # model_apps.state_recent_view = "AnypointView"
+        # model_apps.change_anypoint_mode = "mode_2"
+        # model_apps.set_draw_polygon = True
+        # model_apps.create_maps_anypoint_mode_2()
 
         # setup mouse events
         # just mouseMoveEvent is sufficient but without mousePressEvent, it will be laggy (on my machine, YMMV)
@@ -207,19 +212,19 @@ class Controller(QtWidgets.QWidget):
     def delete_monitor(self, model_apps):
         ui_idx = self.grid_manager.get_index_of_slot(model_apps)
         if ui_idx == -1: return
-        
+
         label, setup_button, capture_button, _ = self.get_monitor_ui_by_idx(ui_idx)
         label.setText(' ')
         setup_button.clicked.disconnect()
         # capture_button.clicked.disconnect()
-    
+
         model_apps.timer.stop()
         model_apps.__image_result = None
         model_apps.image = None
         model_apps.image_resize = None
-   
+
         model_apps.reset_config()
-    
+
         if model_apps.cap is not None:
             try:
                 model_apps.cap.close()
@@ -229,11 +234,9 @@ class Controller(QtWidgets.QWidget):
 
         # THIS WILL MAKE "QThread: Destroyed while thread is still running"
         # Already used QTimer.singleShot(1000, lambda: ...) but still same results
-        # delete_button.clicked.disconnect() 
+        # delete_button.clicked.disconnect()
 
         self.grid_manager.clear_slot(ui_idx)
-    
-    
 
     def get_monitor_ui_by_idx(self, ui_idx):
         label = getattr(self.ui, "displayLab%s" % ui_idx)
