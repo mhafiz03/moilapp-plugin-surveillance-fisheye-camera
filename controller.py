@@ -40,8 +40,77 @@ class GridManager:
 
 # for the setup dialog
 class SetupDialog(QtWidgets.QDialog):
-    def __init__(self):
+    def __init__(self, model_apps):
         super().__init__()
+        self.model_apps = model_apps
+        self.model = Model()
+        self.ui = Ui_Setup()
+        self.ui.setupUi(self)
+        self.ui.cancelButton.clicked.connect(self.reject_function)
+        self.ui.okButton.clicked.connect(self.accept_function)
+
+        # setup and gracefully close the slots and signals of ModelApps (image_result and signal_image_original)
+        update_result_label_slot = lambda img: self.update_label_image(self.ui.label_image_result, img)
+        update_original_label_slot = lambda img: self.update_label_image(self.ui.label_image_original, img)
+        self.setup_result_signal(update_result_label_slot, self.model_apps.image_result)
+        self.setup_original_signal(update_original_label_slot, self.model_apps.signal_image_original)
+
+        self.ui.m1Button.setChecked(True)
+        self.ui.modeSelectGroup.buttonClicked.connect(self.mode_select_clicked)
+        self.mode_select_clicked()
+        
+        self.ui.label_15.hide()
+        self.ui.comboBox_resolution_sources.hide()
+
+        self.ui.checkBox.stateChanged.connect(self.checkbox_click)
+        self.ui.checkBox.setChecked(True)
+        self.checkbox_click()
+                
+        # self.ui.alphaSpinbox.valueChanged.connect()
+        # self.ui.betaSpinbox.valueChanged.connect()
+        # self.ui.yawSpinbox.valueChanged.connect()
+        # self.ui.pitchSpinbox.valueChanged.connect()
+        # self.ui.rollSpinbox.valueChanged.connect()
+        # self.ui.zoomSpinbox.valueChanged.connect(control_change_zooming)
+
+        self.model_apps.alpha_beta.connect(self.alpha_beta_from_coordinate)
+        self.model_apps.state_rubberband = False
+
+        # setup mouse events
+        # ui_setup.label_image_original.mouseReleaseEvent =
+        self.ui.label_image_original.mouseMoveEvent = lambda event: self.model_apps.label_original_mouse_move_event(
+            self.ui.label_image_original, event)
+        self.ui.label_image_original.mousePressEvent = lambda event: self.model_apps.label_original_mouse_move_event(
+            self.ui.label_image_original, event)
+        self.ui.label_image_original.leaveEvent = lambda event: self.model_apps.label_original_mouse_leave_event()
+        # ui_setup.label_image_original.mouseDoubleClickEvent =
+
+    # set up Anypoint Mode 1 or 2 with state_recent_view = "AnypointView"
+    def mode_select_clicked(self):
+        self.ui.frameMode2.hide()
+        self.ui.frameMode1.hide()
+        if self.ui.m1Button.isChecked():
+            self.ui.frameMode1.show()
+            self.model_apps.state_recent_view = "AnypointView"
+            self.model_apps.change_anypoint_mode = "mode_1"
+            self.model_apps.create_maps_anypoint_mode_1()
+        else:
+            self.ui.frameMode2.show()
+            self.model_apps.state_recent_view = "AnypointView"
+            self.model_apps.change_anypoint_mode = "mode_2"
+            self.model_apps.create_maps_anypoint_mode_2()
+    
+    def checkbox_click(self):
+        if self.ui.checkBox.isChecked():
+            self.model_apps.set_draw_polygon = True
+        else:
+            self.model_apps.set_draw_polygon = False
+        
+    def alpha_beta_from_coordinate(self, alpha_beta):
+        print(alpha_beta)
+        
+    def update_label_image(self, ui_label, image, width=300, scale_content=False):
+        self.model.show_image_to_label(ui_label, image, width=width, scale_content=scale_content)
 
     # get the slot and signal of the result image (rectilinear) so it can be connected and display it continously
     def setup_result_signal(self, slot, signal):
@@ -58,23 +127,22 @@ class SetupDialog(QtWidgets.QDialog):
     # Escape Key does not invoke closeEvent (to disconnect the signals and slots), so need to do it manually
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key.Key_Escape:
-            self.close_function()
+            self.reject_function()
         else:
             super().keyPressEvent(event)
 
     # need to disconnect the signals and slots else RuntimeError: wrapped C/C++ object of type QLabel has been deleted
     # because the QLabel's lifetime will be over when the Setup Dialog is closed but the previous slot and signal will still call it
     def closeEvent(self, event):
-        self.close_function()
+        self.disconnect_signals()
+        del self.model_apps
         super().closeEvent(event)
 
-    def close_function(self):
-        self.disconnect_signals()
+    def reject_function(self):
         self.reject()
         self.close()
 
     def accept_function(self):
-        self.disconnect_signals()
         self.accept()
         self.close()
 
@@ -157,74 +225,21 @@ class Controller(QtWidgets.QWidget):
         setup_button.clicked.connect(lambda: self.setup_clicked(ui_idx, media_sources))
         delete_button.clicked.connect(lambda: self.delete_monitor(model_apps))
         self.grid_manager.set_slot(ui_idx, model_apps)
+        del prev_model_apps
 
     def update_label_image(self, ui_label, image, width=300, scale_content=False):
         self.model.show_image_to_label(ui_label, image, width=width, scale_content=scale_content)
 
     def setup_monitor(self, model_apps: ModelApps):
-        ui_setup = Ui_Setup()
-        dialog = SetupDialog()
-
-        ui_setup.setupUi(dialog)
-        ui_setup.cancelButton.clicked.connect(dialog.close_function)
-        ui_setup.okButton.clicked.connect(dialog.accept_function)
-
-        # set up Anypoint Mode 1 or 2 with state_recent_view = "AnypointView"
-        def mode_select_clicked():
-            ui_setup.frameMode2.hide()
-            ui_setup.frameMode1.hide()
-            if ui_setup.m1Button.isChecked():
-                ui_setup.frameMode1.show()
-                model_apps.state_recent_view = "AnypointView"
-                model_apps.change_anypoint_mode = "mode_1"
-                model_apps.create_maps_anypoint_mode_1()
-            else:
-                ui_setup.frameMode2.show()
-                model_apps.state_recent_view = "AnypointView"
-                model_apps.change_anypoint_mode = "mode_2"
-                model_apps.create_maps_anypoint_mode_2()
-
-        ui_setup.m1Button.setChecked(True)
-        ui_setup.modeSelectGroup.buttonClicked.connect(mode_select_clicked)
-        mode_select_clicked()
+        dialog = SetupDialog(model_apps)
         
-        ui_setup.label_15.hide()
-        ui_setup.comboBox_resolution_sources.hide()
-
-        def checkbox_click():
-            if ui_setup.checkBox.isChecked():
-                model_apps.set_draw_polygon = True
-            else:
-                model_apps.set_draw_polygon = False
-
-        ui_setup.checkBox.stateChanged.connect(checkbox_click)
-        ui_setup.checkBox.setChecked(True)
-        checkbox_click()
-
-        # setup and gracefully close the slots and signals of ModelApps (image_result and signal_image_original)
-        update_result_label_slot = lambda img: self.update_label_image(ui_setup.label_image_result, img)
-        dialog.setup_result_signal(update_result_label_slot, model_apps.image_result)
-        update_original_label_slot = lambda img: self.update_label_image(ui_setup.label_image_original, img)
-        dialog.setup_original_signal(update_original_label_slot, model_apps.signal_image_original)
-
-        model_apps.alpha_beta.connect(self.alpha_beta_from_coordinate)
-        model_apps.state_rubberband = False
-
-        # setup mouse events
-        # ui_setup.label_image_original.mouseReleaseEvent =
-        ui_setup.label_image_original.mouseMoveEvent = lambda event: model_apps.label_original_mouse_move_event(
-            ui_setup.label_image_original, event)
-        ui_setup.label_image_original.mousePressEvent = lambda event: model_apps.label_original_mouse_move_event(
-            ui_setup.label_image_original, event)
-        ui_setup.label_image_original.leaveEvent = lambda event: model_apps.label_original_mouse_leave_event()
-        # ui_setup.label_image_original.mouseDoubleClickEvent =
-
         # start setup dialog
         result = dialog.exec()
+        del dialog
         if result == QtWidgets.QDialog.DialogCode.Accepted:
             return True
         elif result == QtWidgets.QDialog.DialogCode.Rejected:
-            # import os, re
+            # import os
             # os.remove('./models/cached/cache_config.yaml')
             # with open('./models/cached/plugin_cached.yaml', 'w', encoding='utf-8') as fp:
             #     fp.write('plugin_run: 0\n')
@@ -266,9 +281,6 @@ class Controller(QtWidgets.QWidget):
         capture_button = getattr(self.ui, "captureButton%s" % ui_idx)
         delete_button = getattr(self.ui, "deleteButton%s" % ui_idx)
         return label, setup_button, capture_button, delete_button
-
-    def alpha_beta_from_coordinate(self, alpha_beta):
-        print(alpha_beta)
 
     def captured_clicked(self):
         pass
